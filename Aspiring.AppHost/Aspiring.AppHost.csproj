@@ -16,4 +16,9 @@
         <PackageReference Include="Aspire.Hosting.Redis" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Aspiring.ApiService\Aspiring.ApiService.csproj" />
+      <ProjectReference Include="..\Aspiring.Web\Aspiring.Web.csproj" />
+    </ItemGroup>
+
 </Project>

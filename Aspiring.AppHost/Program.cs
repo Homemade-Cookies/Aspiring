@@ -1,4 +1,4 @@
-using Aspire.Hosting;
+using Aspiring.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -19,7 +19,7 @@ var mongoDb = mongo.AddDatabase("MongoDB-Database");
 
 var cache = builder.AddRedis("cache").PublishAsContainer();
 
-var api = builder.AddProject<Projects.WebApi>("SponsorPaymentsAPI")
+var api = builder.AddProject<Projects.Aspiring_ApiService>("AspiringAPI")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
     .WithReference(mongoDb);
@@ -29,10 +29,10 @@ var grafana = builder.AddContainer("Grafana", "grafana/grafana")
                      .WithBindMount("../grafana/dashboards", "/var/lib/grafana/dashboards", isReadOnly: true)
                      .WithHttpEndpoint(targetPort: 3000, name: "http");
 
-//builder.AddProject<Projects.WebSpa>("app")
+//builder.AddProject<Projects.Aspiring_Web>("app")
 //       .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));
 
-var spa = builder.AddProject<Projects.WebSpa>("SponsorPaymentsSPA")
+var spa = builder.AddProject<Projects.Aspiring_Web>("AspiringWeb")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
     .WithReference(api)
