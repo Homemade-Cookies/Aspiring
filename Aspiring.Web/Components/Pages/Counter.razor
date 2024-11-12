@@ -17,3 +17,34 @@
         currentCount++;
     }
 }
+
+public class CounterTests
+{
+    [Fact]
+    public void IncrementCount_IncreasesCurrentCount()
+    {
+        // Arrange
+        var counter = new Counter();
+
+        // Act
+        counter.IncrementCount();
+
+        // Assert
+        Assert.Equal(1, counter.currentCount);
+    }
+
+    [Fact]
+    public void IncrementCount_IncreasesCurrentCountMultipleTimes()
+    {
+        // Arrange
+        var counter = new Counter();
+
+        // Act
+        counter.IncrementCount();
+        counter.IncrementCount();
+        counter.IncrementCount();
+
+        // Assert
+        Assert.Equal(3, counter.currentCount);
+    }
+}

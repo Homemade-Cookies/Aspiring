@@ -1,4 +1,7 @@
 using Aspire.Hosting.Lifecycle;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Xunit;
 
 namespace Aspiring.AppHost;
 
@@ -86,4 +89,40 @@ internal static class HealthChecksUIDefaults
     /// The default name of the HTTP endpoint projects serve health check details from.
     /// </summary>
     public const string EndpointName = "healthchecks";
+}
+
+public class HealthChecksUIExtensionsTests
+{
+    [Fact]
+    public void AddHealthChecksUI_AddsResource()
+    {
+        // Arrange
+        var builder = new DistributedApplicationBuilder();
+
+        // Act
+        var resourceBuilder = builder.AddHealthChecksUI("TestResource");
+
+        // Assert
+        Assert.NotNull(resourceBuilder);
+        Assert.Equal("TestResource", resourceBuilder.Resource.Name);
+    }
+
+    [Fact]
+    public void WithReference_AddsMonitoredProject()
+    {
+        // Arrange
+        var builder = new DistributedApplicationBuilder();
+        var projectBuilder = new ProjectResourceBuilder("TestProject");
+
+        // Act
+        var resourceBuilder = builder.AddHealthChecksUI("TestResource")
+            .WithReference(projectBuilder, "TestEndpoint", "/test");
+
+        // Assert
+        Assert.Single(resourceBuilder.Resource.MonitoredProjects);
+        var monitoredProject = resourceBuilder.Resource.MonitoredProjects.First();
+        Assert.Equal("TestProject", monitoredProject.Project.Resource.Name);
+        Assert.Equal("TestEndpoint", monitoredProject.EndpointName);
+        Assert.Equal("/test", monitoredProject.ProbePath);
+    }
 }

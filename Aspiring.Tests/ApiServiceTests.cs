@@ -1,8 +1,30 @@
-namespace Aspiring.ApiService;
+using System.Net;
+using Aspiring.ApiService;
 
-internal sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+namespace Aspiring.Tests;
+
+public class ApiServiceTests
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    [Fact]
+    public async Task GetWeatherForecastEndpointReturnsExpectedData()
+    {
+        // Arrange
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        await using var app = await appHost.BuildAsync();
+        await app.StartAsync();
+
+        // Act
+        using var httpClient = app.CreateHttpClient("apiservice");
+        var response = await httpClient.GetAsync(new Uri("/weatherforecast", UriKind.Relative));
+        var responseData = await response.Content.ReadAsStringAsync();
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Date", responseData);
+        Assert.Contains("TemperatureC", responseData);
+        Assert.Contains("TemperatureF", responseData);
+        Assert.Contains("Summary", responseData);
+    }
 }
 
 public class WeatherForecastTests

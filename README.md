@@ -24,6 +24,21 @@ To get the project up and running, follow these steps:
    dotnet run --project Aspiring.AppHost
    ```
 
+4. Run the tests:
+   ```sh
+   dotnet test
+   ```
+
+5. Access the health checks UI:
+   ```sh
+   http://localhost:8080/healthchecks-ui
+   ```
+
+6. View the Grafana dashboard:
+   ```sh
+   http://localhost:3000
+   ```
+
 ## Usage Examples
 
 Here are some examples of how to use the project:
