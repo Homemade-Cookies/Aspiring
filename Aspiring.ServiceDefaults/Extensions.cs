@@ -195,7 +195,7 @@ public static class Extensions
                     setup.AddWebhookNotification("webhook1", uri: "https://sponsor-payments.healthchecks2.requestcatcher.com/",
                             payload: "{ message: \"Webhook report for [[LIVENESS]]: [[FAILURE]] - Description: [[DESCRIPTIONS]]\"}",
                                 restorePayload: "{ message: \"[[LIVENESS]] is back to life\"}",
-                                shouldNotifyFunc: (livenessName, report) => DateTime.UtcNow.Hour >= 8 && DateTime.UtcNow.Hour <= 23,
+                                shouldNotifyFunc: (livenessName, report) => DateTime.UtcNow.Hour is >= 8 and <= 23,
                                 customMessageFunc: (livenessName, report) =>
                                {
                                    var failing = report.Entries.Where(e => e.Value.Status == UIHealthStatus.Unhealthy);
