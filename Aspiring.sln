@@ -9,16 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspiring.ServiceDefaults", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspiring.Tests", "Aspiring.Tests\Aspiring.Tests.csproj", "{0F17B044-D547-48D7-AD73-003D37A0F056}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{08ED2DF7-FFF5-4013-AFD0-D02B1B8D3226}"
-	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
-		Default.ruleset = Default.ruleset
-		Directory.Build.props = Directory.Build.props
-		Directory.Packages.props = Directory.Packages.props
-		LICENSE = LICENSE
-		README.md = README.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana", "grafana", "{650EEB15-26E5-45A0-8F18-02F5955103B3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prometheus", "prometheus", "{CD46078C-79A7-4CB7-8F65-6657D682B781}"
@@ -53,6 +43,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspiring.ApiService", "Aspi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspiring.Web", "Aspiring.Web\Aspiring.Web.csproj", "{A995B0DF-7115-492C-A967-0F1DE5BE595B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F8F87C5A-1BAF-4C49-93FC-C947787716DD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Default.ruleset = Default.ruleset
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,8 +85,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{650EEB15-26E5-45A0-8F18-02F5955103B3} = {08ED2DF7-FFF5-4013-AFD0-D02B1B8D3226}
-		{CD46078C-79A7-4CB7-8F65-6657D682B781} = {08ED2DF7-FFF5-4013-AFD0-D02B1B8D3226}
+		{650EEB15-26E5-45A0-8F18-02F5955103B3} = {F8F87C5A-1BAF-4C49-93FC-C947787716DD}
+		{CD46078C-79A7-4CB7-8F65-6657D682B781} = {F8F87C5A-1BAF-4C49-93FC-C947787716DD}
 		{820C3830-32FB-4ADD-A318-B703970BDC3B} = {650EEB15-26E5-45A0-8F18-02F5955103B3}
 		{C43DC337-2708-43BA-882E-B8F70003994B} = {650EEB15-26E5-45A0-8F18-02F5955103B3}
 		{5846F3B8-7B4A-4B67-A722-1F9685E22B6D} = {820C3830-32FB-4ADD-A318-B703970BDC3B}

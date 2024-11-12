@@ -1,4 +1,5 @@
 using Aspiring.ApiService;
+using Aspiring.ServiceDefaults;
 using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);

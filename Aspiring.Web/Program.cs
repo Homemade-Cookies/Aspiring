@@ -1,4 +1,5 @@
-using AspireApp.Web;
+using Aspiring.ServiceDefaults;
+using Aspiring.Web;
 using Aspiring.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);

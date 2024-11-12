@@ -1,22 +1,15 @@
-using System.Collections.Generic;
-using System;
 using System.Diagnostics;
-using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting;
-using System.Threading.Tasks;
-using System.Threading;
 using Aspire.Hosting.Lifecycle;
-using System.Linq;
 using System.Globalization;
 
-namespace HealthChecksUI;
+namespace Aspiring.AppHost;
 
 /// <summary>
 /// A container-based resource for the HealthChecksUI container.
 /// See https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks?tab=readme-ov-file#HealthCheckUI
 /// </summary>
 /// <param name="name">The resource name.</param>
-public sealed class HealthChecksUIResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
+internal sealed class HealthChecksUIResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
 {
     /// <summary>
     /// The projects to be monitored by the HealthChecksUI container.
@@ -27,7 +20,7 @@ public sealed class HealthChecksUIResource(string name) : ContainerResource(name
     /// Known environment variables for the HealthChecksUI container that can be used to configure the container.
     /// Taken from https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks/blob/master/doc/ui-docker.md#environment-variables-table
     /// </summary>
-    public static class KnownEnvVars
+    internal static class KnownEnvVars
     {
         public const string UiPath = "ui_path";
         // These keys are taken from https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks?tab=readme-ov-file#sample-2-configuration-using-appsettingsjson
@@ -44,7 +37,7 @@ public sealed class HealthChecksUIResource(string name) : ContainerResource(name
 /// <summary>
 /// Represents a project to be monitored by a <see cref="HealthChecksUIResource"/>.
 /// </summary>
-public sealed class MonitoredProject(IResourceBuilder<ProjectResource> project, string endpointName, string probePath)
+internal sealed class MonitoredProject(IResourceBuilder<ProjectResource> project, string endpointName, string probePath)
 {
     private string? _name;
 

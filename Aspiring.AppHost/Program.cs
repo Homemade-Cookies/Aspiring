@@ -1,4 +1,4 @@
-using Aspiring.Hosting;
+using Aspiring.AppHost;
 
 var builder = DistributedApplication.CreateBuilder(args);
 

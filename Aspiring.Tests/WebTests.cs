@@ -24,13 +24,13 @@ public class WebTests
     public async Task GetWebResourceHealthCheckReturnsOkStatusCode()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspire_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
         // Act
         using var httpClient = app.CreateHttpClient("webfrontend");
-        var response = await httpClient.GetAsync("/health");
+        var response = await httpClient.GetAsync(new Uri("/health", UriKind.Relative));
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -40,13 +40,13 @@ public class WebTests
     public async Task GetWebResourceMetricsReturnsOkStatusCode()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspire_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
         // Act
         using var httpClient = app.CreateHttpClient("webfrontend");
-        var response = await httpClient.GetAsync("/metrics");
+        var response = await httpClient.GetAsync(new Uri("/metrics", UriKind.Relative));
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

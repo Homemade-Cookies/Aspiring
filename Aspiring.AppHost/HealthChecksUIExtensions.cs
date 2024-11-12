@@ -1,10 +1,8 @@
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
-using HealthChecksUI;
 
-namespace Aspiring.Hosting;
+namespace Aspiring.AppHost;
 
-public static class HealthChecksUIExtensions
+internal static class HealthChecksUIExtensions
 {
     /// <summary>
     /// Adds a HealthChecksUI container to the application model.
@@ -57,7 +55,7 @@ public static class HealthChecksUIExtensions
     //       https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks/blob/master/doc/ui-docker.md#Storage-Providers-Configuration
 }
 
-public static class HealthChecksUIDefaults
+internal static class HealthChecksUIDefaults
 {
     /// <summary>
     /// The default container registry to pull the HealthChecksUI container image from.

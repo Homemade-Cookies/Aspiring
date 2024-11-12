@@ -7,12 +7,16 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<!-- SA0001: All diagnostics of XML documentation comments has been disabled due to the current project configuration. -->
 		<NoWarn>SA0001</NoWarn>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<CodeAnalysisRuleSet>$([MSBuild]::GetPathOfFileAbove('Default.ruleset', '$(MSBuildThisFileDirectory)'))</CodeAnalysisRuleSet>
 		<RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 	</PropertyGroup>
 </Project>
