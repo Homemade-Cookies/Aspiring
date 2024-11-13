@@ -1,6 +1,9 @@
 using System.Net;
 using Aspire.Hosting;
 using Aspiring.AppHost;
+using Microsoft.Extensions.Compliance.Redaction;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Aspiring.Tests;
 
@@ -11,6 +14,23 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
+        appHost.Services.AddExtendedHttpClientLogging();
+        appHost.Services.AddLogging(configure =>
+        {
+            configure.AddConsole()
+                .SetMinimumLevel(LogLevel.Debug);
+        });
+        using var handler = new HttpClientHandler()
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+
+        appHost.Services.ConfigureHttpClientDefaults(configure =>
+        {
+            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
+        });
+
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
@@ -27,6 +47,23 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
+        appHost.Services.AddExtendedHttpClientLogging();
+        appHost.Services.AddLogging(configure =>
+        {
+            configure.AddConsole()
+                .SetMinimumLevel(LogLevel.Debug);
+        });
+        using var handler = new HttpClientHandler()
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+
+        appHost.Services.ConfigureHttpClientDefaults(configure =>
+        {
+            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
+        });
+
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
@@ -43,6 +80,23 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
+        appHost.Services.AddExtendedHttpClientLogging();
+        appHost.Services.AddLogging(configure =>
+        {
+            configure.AddConsole()
+                .SetMinimumLevel(LogLevel.Debug);
+        });
+        using var handler = new HttpClientHandler()
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+
+        appHost.Services.ConfigureHttpClientDefaults(configure =>
+        {
+            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
+        });
+
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
