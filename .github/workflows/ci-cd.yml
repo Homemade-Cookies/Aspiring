@@ -42,3 +42,22 @@ jobs:
         run: |
           echo "Deploying application..."
           # Add your deployment script or commands here
+
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: dotnet
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
