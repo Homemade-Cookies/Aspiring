@@ -44,7 +44,6 @@ jobs:
           # Add your deployment script or commands here
 
   codeql:
-    name: "CodeQL"
     runs-on: ubuntu-latest
     permissions:
       actions: read
