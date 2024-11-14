@@ -10,7 +10,7 @@ namespace Aspiring.Tests;
 public class WebTests
 {
     [Fact]
-    public async Task GetWebResourceRootReturnsOkStatusCode()
+    public async Task GetWebResourcePathsReturnOkStatusCode()
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
@@ -34,78 +34,21 @@ public class WebTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        // Act
-        using var httpClient = app.CreateHttpClient("AspiringWeb");
-        var response = await httpClient.GetAsync(new Uri("/", UriKind.Relative));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetWebResourceHealthCheckReturnsOkStatusCode()
-    {
-        // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
+        var paths = new[]
         {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
-        using var handler = new HttpClientHandler()
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            "/",
+            "/health",
+            "/metrics"
         };
 
-        appHost.Services.ConfigureHttpClientDefaults(configure =>
-        {
-            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
-        });
-
-        await using var app = await appHost.BuildAsync();
-        await app.StartAsync();
+        var tasks = paths.Select(paths =>
+            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(paths, UriKind.Relative)));
 
         // Act
-        using var httpClient = app.CreateHttpClient("AspiringWeb");
-        var response = await httpClient.GetAsync(new Uri("/health", UriKind.Relative));
+        var responses = await Task.WhenAll(tasks);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetWebResourceMetricsReturnsOkStatusCode()
-    {
-        // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
-        {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
-        using var handler = new HttpClientHandler()
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        };
-
-        appHost.Services.ConfigureHttpClientDefaults(configure =>
-        {
-            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
-        });
-
-        await using var app = await appHost.BuildAsync();
-        await app.StartAsync();
-
-        // Act
-        using var httpClient = app.CreateHttpClient("AspiringWeb");
-        var response = await httpClient.GetAsync(new Uri("/metrics", UriKind.Relative));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
     }
 
     [Fact]

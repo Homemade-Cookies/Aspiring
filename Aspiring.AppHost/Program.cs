@@ -6,14 +6,14 @@ var builder = DistributedApplication.CreateBuilder(args);
 //builder.AddDockerfile("spa", "spa/Dockerfile");
 //builder.AddDockerfile("api", "api/Dockerfile");
 
-var mongo = builder.AddMongoDB("MongoDB");
-//.WithMongoExpress(c =>
-//    c.WithHostPort(3022)
-//    .WithExternalHttpEndpoints()
-//    .WithEndpoint(8081, 3022)
-//    .WithOtlpExporter()
-//    .WithVolume("mongo-data", "/data/db")
-//);
+var mongo = builder.AddMongoDB("MongoDB")
+.WithMongoExpress(c =>
+    c.WithHostPort(3022)
+    .WithExternalHttpEndpoints()
+    .WithEndpoint(8081, 3022)
+    .WithOtlpExporter()
+    .WithVolume("mongo-data", "/data/db")
+);
 
 var mongoDb = mongo.AddDatabase("MongoDB-Database");
 
