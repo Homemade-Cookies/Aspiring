@@ -1,4 +1,7 @@
 # Aspiring
+[![CI/CD Pipeline](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/ci-cd.yml)
+[![CodeQL Advanced](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/codeql.yml/badge.svg)](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/codeql.yml)
+[![Microsoft Defender For Devops](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/defender-for-devops.yml/badge.svg)](https://github.com/Homemade-Cookies/Aspiring/actions/workflows/defender-for-devops.yml)
 
 ## Overview
 
