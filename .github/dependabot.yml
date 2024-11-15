@@ -15,12 +15,14 @@ updates:
 
   # Maintain dependencies for npm
   - package-ecosystem: "npm"
-    directory: "**/*"
+    directories:
+      - "**/*"
     schedule:
       interval: "weekly"
 
   # Maintain dependencies for Composer
   - package-ecosystem: "nuget"
-    directory: "**/*"
+    directories:
+      - "**/*"
     schedule:
       interval: "weekly"
