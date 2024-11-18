@@ -26,3 +26,8 @@ updates:
       - "**/*"
     schedule:
       interval: "weekly"
+    groups:
+      # Group all NuGet updates together
+      all-nuget-updates:
+        patterns:
+          - "*"
