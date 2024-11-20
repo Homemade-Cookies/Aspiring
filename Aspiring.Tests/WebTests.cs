@@ -48,7 +48,7 @@ public class WebTests
         var responses = await Task.WhenAll(tasks);
 
         // Assert
-        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
     }
 
     [Fact]

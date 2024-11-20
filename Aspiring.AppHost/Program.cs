@@ -17,7 +17,7 @@ var mongo = builder.AddMongoDB("MongoDB")
 
 var mongoDb = mongo.AddDatabase("MongoDB-Database");
 
-var cache = builder.AddRedis("cache").PublishAsContainer();
+var cache = builder.AddRedis("cache").WithRedisInsight().PublishAsContainer();
 
 var api = builder.AddProject<Projects.Aspiring_ApiService>("AspiringAPI")
     .WithExternalHttpEndpoints()
