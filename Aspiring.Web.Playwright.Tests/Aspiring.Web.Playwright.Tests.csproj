@@ -25,8 +25,6 @@
     <Using Include="Microsoft.Playwright" />
     <Using Include="Xunit" />
     <Using Include="System.Text.Json" />
-    <Using Include="System.Text.RegularExpressions" />
-    <Using Include="System.Threading.Tasks" />
   </ItemGroup>
 
 </Project>
