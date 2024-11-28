@@ -1,0 +1,27 @@
+{
+  "title": "Chess Game",
+  "description": "A Blazor component for playing a chess game.",
+  "author": "Your Name",
+  "version": "1.0.0",
+  "dependencies": {
+    "Microsoft.AspNetCore.Components.WebAssembly": "6.0.0",
+    "Microsoft.AspNetCore.SignalR.Client": "6.0.0",
+    "MongoDB.Driver": "2.13.3",
+    "StackExchange.Redis": "2.2.4",
+    "OpenTelemetry": "1.2.0",
+    "OpenTelemetry.Extensions.Hosting": "1.0.0-rc9",
+    "OpenTelemetry.Instrumentation.AspNetCore": "1.0.0-rc9",
+    "OpenTelemetry.Instrumentation.Http": "1.0.0-rc9",
+    "OpenTelemetry.Instrumentation.MongoDB": "1.0.0-rc9",
+    "OpenTelemetry.Instrumentation.Redis": "1.0.0-rc9"
+  },
+  "components": [
+    {
+      "name": "ChessGame",
+      "file": "ChessGame.razor",
+      "css": "ChessGame.razor.css",
+      "cs": "ChessGame.razor.cs",
+      "js": "ChessGame.razor.js"
+    }
+  ]
+}

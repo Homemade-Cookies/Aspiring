@@ -38,9 +38,16 @@ var spa = builder.AddProject<Projects.Aspiring_Web>("AspiringWeb")
     .WithReference(api)
     .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));
 
+var chessGame = builder.AddProject<Projects.ChessGame>("ChessGame")
+    .WithExternalHttpEndpoints()
+    .WithReference(cache)
+    .WithReference(api)
+    .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));
+
 builder.AddHealthChecksUI("Health-Checks-UI")
     .WithReference(api)
     .WithReference(spa)
+    .WithReference(chessGame)
     // This will make the HealthChecksUI dashboard available from external networks when deployed.
     // In a production environment, you should consider adding authentication to the ingress layer
     // to restrict access to the dashboard.
