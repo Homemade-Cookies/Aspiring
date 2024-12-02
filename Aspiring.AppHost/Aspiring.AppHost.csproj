@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Azure.SignalR" />
     <PackageReference Include="Aspire.Hosting.MongoDB" />
     <PackageReference Include="Aspire.Hosting.Redis" />
   </ItemGroup>
@@ -19,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Aspiring.ApiService\Aspiring.ApiService.csproj" />
     <ProjectReference Include="..\Aspiring.Web\Aspiring.Web.csproj" />
+    <ProjectReference Include="..\Aspiring.Chess\Aspiring.Chess.csproj" />
   </ItemGroup>
 
 </Project>

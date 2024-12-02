@@ -5,7 +5,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Aspire.StackExchange.Redis.OutputCaching" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Aspire.StackExchange.Redis.OutputCaching" />
 		<PackageReference Include="Azure.Identity" />
 		<PackageReference Include="Microsoft.Identity.Client" />
 	</ItemGroup>

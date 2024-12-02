@@ -1,0 +1,191 @@
+@page "/chess"
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.SignalR.Client
+@using MongoDB.Driver
+@using StackExchange.Redis
+
+<div class="chessgame">
+    <h1>Chess Game</h1>
+    <div class="selected-piece">
+        @if (selectedCell.HasValue)
+        {
+            <p>Selected Piece: @GetPiece(selectedCell.Value.row, selectedCell.Value.col)</p>
+        }
+        else
+        {
+            <p>No piece selected</p>
+        }
+    </div>
+    <div class="chessboard">
+        @for (int row = 0; row < 8; row++)
+        {
+            <div class="chessboard-row">
+                @for (int col = 0; col < 8; col++)
+                {
+                    <div class="chessboard-cell @(GetCellClass(row, col)) @(IsSelectedCell(row, col) ? "selected-cell" : "")"
+                         @onclick="() => OnCellClick(row, col)">
+                        @GetPiece(row, col)
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string[,] board = new string[8, 8];
+    private bool isWhiteTurn = true;
+    private (int row, int col)? selectedCell = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeBoard();
+        await Task.CompletedTask; // To avoid CS1998 warning
+    }
+
+    private void InitializeBoard()
+    {
+        // Initialize the board with pieces
+        board[0, 0] = "R"; // Rook
+        board[0, 1] = "N"; // Knight
+        board[0, 2] = "B"; // Bishop
+        board[0, 3] = "Q"; // Queen
+        board[0, 4] = "K"; // King
+        board[0, 5] = "B"; // Bishop
+        board[0, 6] = "N"; // Knight
+        board[0, 7] = "R"; // Rook
+
+        for (int i = 0; i < 8; i++)
+        {
+            board[1, i] = "P"; // Pawn
+            board[6, i] = "p"; // Pawn
+        }
+
+        board[7, 0] = "r"; // Rook
+        board[7, 1] = "n"; // Knight
+        board[7, 2] = "b"; // Bishop
+        board[7, 3] = "q"; // Queen
+        board[7, 4] = "k"; // King
+        board[7, 5] = "b"; // Bishop
+        board[7, 6] = "n"; // Knight
+        board[7, 7] = "r"; // Rook
+
+        // Initialize empty cells
+        for (int row = 2; row < 6; row++)
+        {
+            for (int col = 0; col < 8; col++)
+            {
+                board[row, col] = string.Empty;
+            }
+        }
+    }
+
+    private string GetCellClass(int row, int col)
+    {
+        return (row + col) % 2 == 0 ? "light-cell" : "dark-cell";
+    }
+
+    private bool IsSelectedCell(int row, int col)
+    {
+        return selectedCell.HasValue && selectedCell.Value.row == row && selectedCell.Value.col == col;
+    }
+
+    private void OnCellClick(int row, int col)
+    {
+        if (IsValidIndex(row, col))
+        {
+            if (selectedCell == null)
+            {
+                SelectCell(row, col);
+            }
+            else
+            {
+                MovePiece(row, col);
+            }
+        }
+    }
+
+    private void SelectCell(int row, int col)
+    {
+        if (IsValidIndex(row, col) && !string.IsNullOrEmpty(board[row, col]) &&
+            ((isWhiteTurn && char.IsUpper(board[row, col][0])) ||
+            (!isWhiteTurn && char.IsLower(board[row, col][0]))))
+        {
+            selectedCell = (row, col);
+        }
+    }
+
+    private void MovePiece(int row, int col)
+    {
+        if (IsValidIndex(row, col) && selectedCell.HasValue)
+        {
+            var (selectedRow, selectedCol) = selectedCell.Value;
+            if (IsValidMove(selectedRow, selectedCol, row, col))
+            {
+                board[row, col] = board[selectedRow, selectedCol];
+                board[selectedRow, selectedCol] = string.Empty;
+                isWhiteTurn = !isWhiteTurn;
+                selectedCell = null;
+            }
+            else
+            {
+                selectedCell = null;
+            }
+        }
+    }
+
+    private bool IsValidMove(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        if (!IsValidIndex(fromRow, fromCol) || !IsValidIndex(toRow, toCol))
+        {
+            return false;
+        }
+
+        string piece = board[fromRow, fromCol];
+        if (string.IsNullOrEmpty(piece))
+        {
+            return false;
+        }
+
+        // Example validation for pawns
+        if (char.ToLower(piece[0]) == 'p')
+        {
+            int direction = char.IsUpper(piece[0]) ? -1 : 1;
+            if (fromCol == toCol && board[toRow, toCol] == string.Empty)
+            {
+                if (toRow == fromRow + direction)
+                {
+                    return true;
+                }
+            }
+            else if (Math.Abs(fromCol - toCol) == 1 && toRow == fromRow + direction && !string.IsNullOrEmpty(board[toRow, toCol]))
+            {
+                return true;
+            }
+        }
+
+        // Add more validation for other pieces here
+
+        return false;
+    }
+
+    private bool IsValidIndex(int row, int col)
+    {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    private string GetPiece(int row, int col)
+    {
+        return IsValidIndex(row, col) ? board[row, col] : string.Empty;
+    }
+
+    private sealed record GameState
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string[,] Board { get; set; } = new string[8, 8];
+        public bool IsWhiteTurn { get; set; }
+    }
+}

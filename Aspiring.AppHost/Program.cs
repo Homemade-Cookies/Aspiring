@@ -6,6 +6,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 //builder.AddDockerfile("spa", "spa/Dockerfile");
 //builder.AddDockerfile("api", "api/Dockerfile");
 
+//var signalR = builder.AddAzureSignalR("signalR");
+
 var mongo = builder.AddMongoDB("MongoDB")
 .WithMongoExpress(c =>
     c.WithHostPort(3022)
@@ -38,9 +40,17 @@ var spa = builder.AddProject<Projects.Aspiring_Web>("AspiringWeb")
     .WithReference(api)
     .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));
 
+var chessGame = builder.AddProject<Projects.Aspiring_Chess>("ChessGame")
+    .WithExternalHttpEndpoints()
+    .WithReference(cache)
+    .WithReference(api)
+    //.WithReference(signalR)
+    .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));
+
 builder.AddHealthChecksUI("Health-Checks-UI")
     .WithReference(api)
     .WithReference(spa)
+    .WithReference(chessGame)
     // This will make the HealthChecksUI dashboard available from external networks when deployed.
     // In a production environment, you should consider adding authentication to the ingress layer
     // to restrict access to the dashboard.
