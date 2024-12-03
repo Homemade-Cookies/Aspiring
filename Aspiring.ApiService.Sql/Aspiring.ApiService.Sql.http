@@ -1,0 +1,6 @@
+@Aspiring.ApiService.Sql_HostAddress = http://localhost:5127
+
+GET {{Aspiring.ApiService.Sql_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

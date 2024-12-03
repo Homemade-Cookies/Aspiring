@@ -17,12 +17,23 @@ var mongo = builder.AddMongoDB("MongoDB")
 
 var mongoDb = mongo.AddDatabase("MongoDB-Database");
 
+var sqlDb = builder.AddSqlServer("sql")
+    .WithExternalHttpEndpoints()
+    .WithOtlpExporter()
+    .WithVolume("sql-data", "/data/db")
+    .AddDatabase("sql-Database");
+
 var cache = builder.AddRedis("cache").WithRedisInsight().PublishAsContainer();
 
 var api = builder.AddProject<Projects.Aspiring_ApiService>("AspiringAPI")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
     .WithReference(mongoDb);
+
+var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
+    .WithExternalHttpEndpoints()
+    .WithReference(sqlDb)
+    .WithReference(cache);
 
 var grafana = builder.AddContainer("Grafana", "grafana/grafana")
                      .WithBindMount("../grafana/config", "/etc/grafana", isReadOnly: true)
@@ -40,12 +51,12 @@ var spa = builder.AddProject<Projects.Aspiring_Web>("AspiringWeb")
 
 builder.AddHealthChecksUI("Health-Checks-UI")
     .WithReference(api)
+    .WithReference(sqlApi)
     .WithReference(spa)
     // This will make the HealthChecksUI dashboard available from external networks when deployed.
     // In a production environment, you should consider adding authentication to the ingress layer
     // to restrict access to the dashboard.
     .WithExternalHttpEndpoints();
-
 
 builder.AddContainer("Prometheus", "prom/prometheus")
        .WithBindMount("../prometheus", "/etc/prometheus", isReadOnly: true)

@@ -63,6 +63,17 @@ public class WebTests
     }
 
     [Fact]
+    public void TestSqlServerConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlResource = builder.AddSqlServer("sql");
+        var sqlResourceDb = sqlResource.AddDatabase("sql-Database");
+
+        Assert.NotNull(sqlResource);
+        Assert.NotNull(sqlResourceDb);
+    }
+
+    [Fact]
     public void TestRedisConfiguration()
     {
         var builder = DistributedApplication.CreateBuilder();

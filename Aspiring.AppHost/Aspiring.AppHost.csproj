@@ -14,9 +14,12 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.MongoDB" />
     <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="Microsoft.DependencyValidation.Analyzers" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Aspiring.ApiService.Sql\Aspiring.ApiService.Sql.csproj" />
     <ProjectReference Include="..\Aspiring.ApiService\Aspiring.ApiService.csproj" />
     <ProjectReference Include="..\Aspiring.Web\Aspiring.Web.csproj" />
   </ItemGroup>
