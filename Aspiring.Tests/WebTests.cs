@@ -63,6 +63,17 @@ public class WebTests
     }
 
     [Fact]
+    public void TestSqlServerConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlResource = builder.AddSqlServer("sql");
+        var sqlResourceDb = sqlResource.AddDatabase("sql-Database");
+
+        Assert.NotNull(sqlResource);
+        Assert.NotNull(sqlResourceDb);
+    }
+
+    [Fact]
     public void TestRedisConfiguration()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -142,5 +153,61 @@ public class WebTests
             .WithHttpEndpoint(port: 9090, targetPort: 9090);
 
         Assert.NotNull(prometheus);
+    }
+
+    [Fact]
+    public void TestSqlApiConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlDb = builder.AddSqlServer("sql")
+            .WithExternalHttpEndpoints()
+            .AddDatabase("sql-Database");
+        var cache = builder.AddRedis("cache").PublishAsContainer();
+        var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
+            .WithExternalHttpEndpoints()
+            .WithReference(sqlDb)
+            .WithReference(cache);
+
+        Assert.NotNull(sqlApi);
+    }
+
+    [Fact]
+    public async Task GetWeatherForecastsReturnOkStatusCode()
+    {
+        // Arrange
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
+        appHost.Services.AddExtendedHttpClientLogging();
+        appHost.Services.AddLogging(configure =>
+        {
+            configure.AddConsole()
+                .SetMinimumLevel(LogLevel.Debug);
+        });
+        using var handler = new HttpClientHandler()
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+
+        appHost.Services.ConfigureHttpClientDefaults(configure =>
+        {
+            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
+        });
+
+        await using var app = await appHost.BuildAsync();
+        await app.StartAsync();
+
+        var paths = new[]
+        {
+            "/weatherforecast"
+        };
+
+        var tasks = paths.Select(paths =>
+            app.CreateHttpClient("AspiringAPI-SQL").GetAsync(new Uri(paths, UriKind.Relative)));
+
+        // Act
+        var responses = await Task.WhenAll(tasks);
+
+        // Assert
+        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
     }
 }
