@@ -30,4 +30,8 @@
     <Using Include="System.Threading.Tasks" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Aspiring.ApiService.Sql\Aspiring.ApiService.Sql.csproj" />
+  </ItemGroup>
+
 </Project>
