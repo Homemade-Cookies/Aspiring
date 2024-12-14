@@ -42,6 +42,8 @@
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.66.2" />
     <PackageVersion Include="Microsoft.Net.Test.SDK" Version="17.12.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.45.0" />
