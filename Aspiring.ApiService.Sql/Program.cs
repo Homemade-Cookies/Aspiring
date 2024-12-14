@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Aspiring.ApiService.Sql;
 using Aspiring.ServiceDefaults;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,7 @@ builder.Services.AddIdentityCore<UserAccount>(options => options.SignIn.RequireC
                 .AddApiEndpoints();
 
 builder.Services.AddControllers();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 #if NET9_0_OR_GREATER
@@ -47,6 +49,16 @@ using (var scope = app.Services.CreateScope())
         var migrations = string.Join(", ", pendingMigrations);
         throw new DataMisalignedException($"There are pending migrations: {migrations}");
     }
+
+    // Seed data
+    if (!dbContext.WeatherForecasts.Any())
+    {
+        dbContext.WeatherForecasts.AddRange(
+            new WeatherForecast(DateOnly.FromDateTime(DateTime.Now), 25, "Warm"),
+            new WeatherForecast(DateOnly.FromDateTime(DateTime.Now.AddDays(1)), 28, "Hot")
+        );
+        dbContext.SaveChanges();
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -65,6 +77,23 @@ app.UseAuthorization();
 
 app.MapIdentityApi<UserAccount>();
 
+var summaries = new[]
+{
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+};
+
+app.MapGet("/weatherforecast", () =>
+{
+    var forecast = Enumerable.Range(1, 5).Select(index =>
+        new WeatherForecast
+        (
+            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            RandomNumberGenerator.GetInt32(-20, 55),
+            summaries[RandomNumberGenerator.GetInt32(summaries.Length)]
+        ))
+        .ToArray();
+    return forecast;
+});
 app.MapControllers();
 
 app.Run();

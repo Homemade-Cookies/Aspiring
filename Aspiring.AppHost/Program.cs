@@ -7,13 +7,10 @@ var builder = DistributedApplication.CreateBuilder(args);
 //builder.AddDockerfile("api", "api/Dockerfile");
 
 var mongo = builder.AddMongoDB("MongoDB")
-.WithMongoExpress(c =>
-    c.WithHostPort(3022)
     .WithExternalHttpEndpoints()
-    .WithEndpoint(8081, 3022)
     .WithOtlpExporter()
     .WithVolume("mongo-data", "/data/db")
-);
+    .WithMongoExpress();
 
 var mongoDb = mongo.AddDatabase("MongoDB-Database");
 
@@ -27,11 +24,15 @@ var cache = builder.AddRedis("cache").WithRedisInsight().PublishAsContainer();
 
 var api = builder.AddProject<Projects.Aspiring_ApiService>("AspiringAPI")
     .WithExternalHttpEndpoints()
+    .WaitFor(mongoDb)
+    .WaitFor(cache)
     .WithReference(cache)
     .WithReference(mongoDb);
 
 var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
     .WithExternalHttpEndpoints()
+    .WaitFor(sqlDb)
+    .WaitFor(cache)
     .WithReference(sqlDb)
     .WithReference(cache);
 
@@ -45,6 +46,7 @@ var grafana = builder.AddContainer("Grafana", "grafana/grafana")
 
 var spa = builder.AddProject<Projects.Aspiring_Web>("AspiringWeb")
     .WithExternalHttpEndpoints()
+    .WaitFor(api)
     .WithReference(cache)
     .WithReference(api)
     .WithEnvironment("GRAFANA_URL", grafana.GetEndpoint("http"));

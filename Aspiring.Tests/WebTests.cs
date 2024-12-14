@@ -196,18 +196,24 @@ public class WebTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
+        // Ensure the app is not null
+        if (app == null)
+        {
+            throw new InvalidOperationException("The app failed to start.");
+        }
+
         var paths = new[]
         {
-            "/weatherforecast"
+            "/WeatherForecast"
         };
 
-        var tasks = paths.Select(paths =>
-            app.CreateHttpClient("AspiringAPI-SQL").GetAsync(new Uri(paths, UriKind.Relative)));
+        var tasks = paths.Select(path =>
+            app.CreateHttpClient("AspiringAPI-SQL").GetAsync(new Uri(path, UriKind.Relative)));
 
         // Act
         var responses = await Task.WhenAll(tasks);
 
         // Assert
-        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
     }
 }
