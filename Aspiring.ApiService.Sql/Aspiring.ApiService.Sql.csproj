@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <UserSecretsId>d491b8fd-fade-495d-a2e8-32c1fc2221f1</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
@@ -22,5 +22,18 @@
   <ItemGroup>
     <ProjectReference Include="..\Aspiring.ServiceDefaults\Aspiring.ServiceDefaults.csproj" />
   </ItemGroup>
+
+  <Target Name="GetTargetPath" DependsOnTargets="Build">
+    <PropertyGroup>
+      <TargetPath>$(OutputPath)$(AssemblyName)$(TargetExt)</TargetPath>
+    </PropertyGroup>
+  </Target>
+
+  <!--<Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(NuGetPackageRoot)\\microsoft.entityframeworkcore.design\\$(MicrosoftEntityFrameworkCoreDesignVersion)\\build\\Microsoft.EntityFrameworkCore.Design.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)\\microsoft.entityframeworkcore.design\\$(MicrosoftEntityFrameworkCoreDesignVersion)\\build\\Microsoft.EntityFrameworkCore.Design.targets'))" />
+  </Target>-->
 
 </Project>

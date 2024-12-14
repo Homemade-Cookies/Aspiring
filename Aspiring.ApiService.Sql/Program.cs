@@ -1,8 +1,8 @@
+using Aspiring.ApiService.Sql;
 using Aspiring.ServiceDefaults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,10 @@ builder.Services.AddIdentityCore<UserAccount>(options => options.SignIn.RequireC
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+#if NET9_0_OR_GREATER
 builder.Services.AddOpenApi();
+#endif
 
 var app = builder.Build();
 
@@ -49,7 +52,9 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+#if NET9_0_OR_GREATER
     app.MapOpenApi();
+#endif
     app.UseDeveloperExceptionPage();
     app.UseHealthChecksUI();
 }
@@ -71,4 +76,5 @@ internal sealed class UserAccount : IdentityUser
 internal sealed class ApiContext(DbContextOptions<ApiContext> options)
     : IdentityDbContext<UserAccount>(options)
 {
+    public DbSet<WeatherForecast> WeatherForecasts { get; set; } = default!;
 }
