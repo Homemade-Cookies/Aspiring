@@ -122,7 +122,7 @@ jobs:
         run: npx playwright install
 
       - name: Run Playwright tests
-        run: npx playwright test --reporter=html --retries=2 --workers=4
+        run: dotnet test Aspiring.Web.Playwright.Tests/Aspiring.Web.Playwright.Tests.csproj --no-build --verbosity normal
 
       - name: Upload Playwright Test Results
         if: always()
