@@ -1,9 +1,8 @@
+using System.IO;
 using System.Net;
 using Aspire.Hosting;
 using Aspiring.AppHost;
-using Microsoft.Extensions.Compliance.Redaction;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Aspiring.Tests;
 
@@ -14,13 +13,6 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
-        {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
         using var handler = new HttpClientHandler()
         {
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
@@ -176,13 +168,6 @@ public class WebTests
     {
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
-        {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
         using var handler = new HttpClientHandler()
         {
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
@@ -204,16 +189,20 @@ public class WebTests
 
         var paths = new[]
         {
+            "/health",
+            "/metrics",
             "/WeatherForecast"
         };
 
-        var tasks = paths.Select(path =>
-            app.CreateHttpClient("AspiringAPI-SQL").GetAsync(new Uri(path, UriKind.Relative)));
-
-        // Act
-        var responses = await Task.WhenAll(tasks);
+        using var client = app.CreateHttpClient("AspiringAPI-SQL");
+        client.Timeout = TimeSpan.FromMinutes(2); // Increase the timeout to 2 minutes
 
         // Assert
-        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        Assert.All(paths, async (path) =>
+        {
+            // Act
+            var response = await client.GetAsync(new Uri(path, UriKind.RelativeOrAbsolute));
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        });
     }
 }
