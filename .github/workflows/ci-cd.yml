@@ -90,7 +90,7 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Run .NET Tests with Code Coverage
-        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity normal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity normal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m
 
       - name: Publish Test Results
         if: always()
