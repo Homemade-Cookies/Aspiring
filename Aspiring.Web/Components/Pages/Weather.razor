@@ -14,6 +14,10 @@
 {
     <p><em>Loading...</em></p>
 }
+else if (errorMessage != null)
+{
+    <p class="text-danger">@errorMessage</p>
+}
 else
 {
     <table class="table">
@@ -41,9 +45,17 @@ else
 
 @code {
     private WeatherForecast[]? forecasts;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await WeatherApi.GetWeatherAsync();
+        try
+        {
+            forecasts = await WeatherApi.GetWeatherAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading weather data: {ex.Message}";
+        }
     }
 }
