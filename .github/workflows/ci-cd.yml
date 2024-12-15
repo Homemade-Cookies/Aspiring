@@ -58,9 +58,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
@@ -114,9 +111,6 @@ jobs:
     needs: build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
@@ -153,9 +147,6 @@ jobs:
     needs: [dotnet-tests, playwright-tests]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
