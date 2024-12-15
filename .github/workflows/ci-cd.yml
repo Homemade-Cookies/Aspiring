@@ -89,8 +89,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-
 
-      - name: Run .NET tests
-        run: dotnet test --no-build --verbosity normal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m
+      - name: Run .NET Tests with Code Coverage
+        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity normal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: Publish Test Results
         if: always()
@@ -98,9 +98,6 @@ jobs:
         with:
           name: dotnet-test-results
           path: Aspiring.Tests/TestResults
-
-      - name: Publish Code Coverage
-        run: dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: Upload Code Coverage Results
         if: always()
