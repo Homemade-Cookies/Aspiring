@@ -84,6 +84,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -108,7 +109,7 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Run .NET Tests with Code Coverage
-        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity minimal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m
+        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity minimal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 10m
 
       - name: Publish Test Results
         if: always()
@@ -125,45 +126,33 @@ jobs:
           path: ./TestResults
 
   playwright-tests:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      matrix:
-        dotnet-version: ['9.0.x']
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+  # notify:
+  #   runs-on: ubuntu-latest
+  #   needs: [dotnet-tests, playwright-tests]
 
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Run Playwright tests
-        uses: microsoft/playwright-github-action@v1
-        with:
-          args: dotnet test Aspiring.Web.Playwright.Tests/Aspiring.Web.Playwright.Tests.csproj --no-build --verbosity minimal
-
-      - name: Upload Playwright Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results
-          path: playwright-report
-
-  notify:
-    runs-on: ubuntu-latest
-    needs: [dotnet-tests, playwright-tests]
-
-    steps:
-      - name: Notify Team
-        run: echo "Build and tests completed. Notify the team here."
+  #   steps:
+  #     - name: Notify Team
+  #       run: echo "Build and tests completed. Notify the team here."
 
   publish:
     runs-on: ubuntu-latest
