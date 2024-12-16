@@ -7,10 +7,8 @@ namespace Aspiring.Tests;
 
 public class WebTests
 {
-    [Fact]
-    public async Task GetWebResourcePathsReturnOkStatusCode()
+    private static async Task<HttpClient> CreateHttpClientAsync()
     {
-        // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
         using var handler = new HttpClientHandler()
         {
@@ -25,22 +23,25 @@ public class WebTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        var paths = new[]
-        {
-            "/",
-            "/health",
-            "/metrics"
-        };
+        return app.CreateHttpClient("AspiringWeb");
+    }
 
-        var tasks = paths.Select(path =>
-            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(path, UriKind.Relative)));
+    private async Task TestPathsAsync(IEnumerable<string> paths)
+    {
+        using var client = await CreateHttpClientAsync();
+        var tasks = paths.Select(path => client.GetAsync(new Uri(path, UriKind.Relative)));
 
-        // Act
-        foreach(var response in (await Task.WhenAll(tasks)))
+        foreach (var response in await Task.WhenAll(tasks))
         {
-            // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
+    }
+
+    [Fact]
+    public async Task GetWebResourcePathsReturnOkStatusCode()
+    {
+        var paths = new[] { "/", "/health", "/metrics" };
+        await TestPathsAsync(paths);
     }
 
     [Fact]
@@ -164,45 +165,10 @@ public class WebTests
     }
 
     [Fact]
-    public async Task GetWeatherForecastsReturnOkStatusCode()
+    public async Task GetWeatherForecastPaths_ReturnsOkStatusCode()
     {
-        // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        using var handler = new HttpClientHandler()
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        };
-
-        appHost.Services.ConfigureHttpClientDefaults(configure =>
-        {
-            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
-        });
-
-        await using var app = await appHost.BuildAsync();
-        await app.StartAsync();
-
-        // Ensure the app is not null
-        if (app == null)
-        {
-            throw new InvalidOperationException("The app failed to start.");
-        }
-
-        var paths = new[]
-        {
-            "/health",
-            "/metrics",
-            "/WeatherForecast"
-        };
-
-        var tasks = paths.Select(path =>
-            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(path, UriKind.Relative)));
-
-        // Act
-        foreach (var response in (await Task.WhenAll(tasks)))
-        {
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
+        var paths = new[] { "/health", "/metrics", "/WeatherForecast" };
+        await TestPathsAsync(paths);
     }
 }
 

@@ -11,20 +11,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x', '9.0.x']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+          dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Cache .NET packages
         uses: actions/cache@v3
@@ -51,25 +49,37 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore --verbosity minimal
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run Code Analysis
+        run: dotnet format --check
 
   dotnet-tests:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x', '9.0.x']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+          dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Cache .NET packages
         uses: actions/cache@v3
@@ -90,18 +100,18 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Run .NET Tests with Code Coverage
-        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity normal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m
+        run: dotnet test Aspiring.Tests/Aspiring.Tests.csproj --no-build --verbosity minimal --filter "TestCategory!=Playwright" --logger "trx;LogFileName=test_results.trx" --blame-hang --blame-hang-timeout 3m
 
       - name: Publish Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results
           path: Aspiring.Tests/TestResults
 
       - name: Upload Code Coverage Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code-coverage-results
           path: ./TestResults
@@ -109,41 +119,38 @@ jobs:
   playwright-tests:
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x', '9.0.x']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Install Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.x'
-
-      - name: Install Playwright CLI
-        run: npm install -g playwright
-
-      - name: Install Playwright browsers
-        run: npx playwright install
+          dotnet-version: ${{ matrix.dotnet-version }}
 
       - name: Run Playwright tests
-        run: dotnet test Aspiring.Web.Playwright.Tests/Aspiring.Web.Playwright.Tests.csproj --no-build --verbosity normal
+        uses: microsoft/playwright-github-action@v1
+        with:
+          args: dotnet test Aspiring.Web.Playwright.Tests/Aspiring.Web.Playwright.Tests.csproj --no-build --verbosity minimal
 
       - name: Upload Playwright Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
           path: playwright-report
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [dotnet-tests, playwright-tests]
+
+    steps:
+      - name: Notify Team
+        run: echo "Build and tests completed. Notify the team here."
 
   publish:
     runs-on: ubuntu-latest
@@ -153,7 +160,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
@@ -183,7 +190,7 @@ jobs:
 
       - name: Publish
         if: github.ref == 'refs/heads/main'
-        run: dotnet publish -c Release -o ./publish --no-build
+        run: dotnet publish -c Release -o ./publish --no-build --verbosity minimal
 
       - name: Deploy
         if: github.ref == 'refs/heads/main'

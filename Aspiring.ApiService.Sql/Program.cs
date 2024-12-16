@@ -95,6 +95,7 @@ app.MapGet("/weatherforecast", () =>
         .ToArray();
     return forecast;
 });
+
 app.MapControllers();
 
 app.Run();
