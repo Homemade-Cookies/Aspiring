@@ -1,26 +1,15 @@
 using System.Net;
 using Aspire.Hosting;
 using Aspiring.AppHost;
-using Microsoft.Extensions.Compliance.Redaction;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Aspiring.Tests;
 
 public class WebTests
 {
-    [Fact]
-    public async Task GetWebResourcePathsReturnOkStatusCode()
+    private static async Task<HttpClient> CreateHttpClientAsync()
     {
-        // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
-        {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
         using var handler = new HttpClientHandler()
         {
             ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
@@ -34,21 +23,25 @@ public class WebTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        var paths = new[]
+        return app.CreateHttpClient("AspiringWeb");
+    }
+
+    private async Task TestPathsAsync(IEnumerable<string> paths)
+    {
+        using var client = await CreateHttpClientAsync();
+        var tasks = paths.Select(path => client.GetAsync(new Uri(path, UriKind.Relative)));
+
+        foreach (var response in await Task.WhenAll(tasks))
         {
-            "/",
-            "/health",
-            "/metrics"
-        };
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+    }
 
-        var tasks = paths.Select(paths =>
-            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(paths, UriKind.Relative)));
-
-        // Act
-        var responses = await Task.WhenAll(tasks);
-
-        // Assert
-        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+    [Fact]
+    public async Task GetWebResourcePathsReturnOkStatusCode()
+    {
+        var paths = new[] { "/", "/health", "/metrics" };
+        await TestPathsAsync(paths);
     }
 
     [Fact]
@@ -60,6 +53,17 @@ public class WebTests
 
         Assert.NotNull(mongo);
         Assert.NotNull(mongoDb);
+    }
+
+    [Fact]
+    public void TestSqlServerConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlResource = builder.AddSqlServer("sql");
+        var sqlResourceDb = sqlResource.AddDatabase("sql-Database");
+
+        Assert.NotNull(sqlResource);
+        Assert.NotNull(sqlResourceDb);
     }
 
     [Fact]
@@ -143,4 +147,28 @@ public class WebTests
 
         Assert.NotNull(prometheus);
     }
+
+    [Fact]
+    public void TestSqlApiConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlDb = builder.AddSqlServer("sql")
+            .WithExternalHttpEndpoints()
+            .AddDatabase("sql-Database");
+        var cache = builder.AddRedis("cache").PublishAsContainer();
+        var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
+            .WithExternalHttpEndpoints()
+            .WithReference(sqlDb)
+            .WithReference(cache);
+
+        Assert.NotNull(sqlApi);
+    }
+
+    [Fact]
+    public async Task GetWeatherForecastPaths_ReturnsOkStatusCode()
+    {
+        var paths = new[] { "/health", "/metrics", "/WeatherForecast" };
+        await TestPathsAsync(paths);
+    }
 }
+
