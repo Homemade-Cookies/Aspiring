@@ -1,4 +1,3 @@
-using System.IO;
 using System.Net;
 using Aspire.Hosting;
 using Aspiring.AppHost;
@@ -33,14 +32,15 @@ public class WebTests
             "/metrics"
         };
 
-        var tasks = paths.Select(paths =>
-            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(paths, UriKind.Relative)));
+        var tasks = paths.Select(path =>
+            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(path, UriKind.Relative)));
 
         // Act
-        var responses = await Task.WhenAll(tasks);
-
-        // Assert
-        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        foreach(var response in (await Task.WhenAll(tasks)))
+        {
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
     }
 
     [Fact]
@@ -194,15 +194,15 @@ public class WebTests
             "/WeatherForecast"
         };
 
-        using var client = app.CreateHttpClient("AspiringAPI-SQL");
-        client.Timeout = TimeSpan.FromMinutes(2); // Increase the timeout to 2 minutes
+        var tasks = paths.Select(path =>
+            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(path, UriKind.Relative)));
 
-        // Assert
-        Assert.All(paths, async (path) =>
+        // Act
+        foreach (var response in (await Task.WhenAll(tasks)))
         {
-            // Act
-            var response = await client.GetAsync(new Uri(path, UriKind.RelativeOrAbsolute));
+            // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        });
+        }
     }
 }
+

@@ -23,7 +23,7 @@ public class PlaywrightTests : IAsyncLifetime
     public async Task HomePage_ShouldLoadSuccessfully()
     {
         var page = await _browser.NewPageAsync();
-        await page.GotoAsync("http://localhost:5280");
+        await page.GotoAsync("https://localhost:7297");
         var title = await page.TitleAsync();
         Assert.Equal("Home Page - Aspiring.Web", title);
     }
@@ -32,8 +32,9 @@ public class PlaywrightTests : IAsyncLifetime
     public async Task HealthCheck_ShouldReturnHealthy()
     {
         var page = await _browser.NewPageAsync();
-        await page.GotoAsync("http://localhost:5280/health");
+        await page.GotoAsync("https://localhost:7297/health");
         var content = await page.ContentAsync();
         Assert.Contains("Healthy", content, StringComparison.OrdinalIgnoreCase);
     }
 }
+
