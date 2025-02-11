@@ -35,6 +35,13 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+        continue-on-error: true  # This will allow the workflow to continue even if the cache step fails
+      
+      - name: Debug Cache
+        run: |
+          ls -la ~/.nuget/packages
+          df -h
+          echo ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
 
       - name: Cache build outputs
         uses: actions/cache@v3
@@ -97,6 +104,13 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+        continue-on-error: true  # This will allow the workflow to continue even if the cache step fails
+      
+      - name: Debug Cache
+        run: |
+          ls -la ~/.nuget/packages
+          df -h
+          echo ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
 
       - name: Restore build outputs
         uses: actions/cache@v3
@@ -179,6 +193,13 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+        continue-on-error: true  # This will allow the workflow to continue even if the cache step fails
+      
+      - name: Debug Cache
+        run: |
+          ls -la ~/.nuget/packages
+          df -h
+          echo ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
 
       - name: Restore build outputs
         uses: actions/cache@v3
