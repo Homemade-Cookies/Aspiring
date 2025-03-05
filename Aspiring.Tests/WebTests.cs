@@ -7,34 +7,39 @@ namespace Aspiring.Tests;
 
 public class WebTests
 {
-    private static async Task<HttpClient> CreateHttpClientAsync()
+    private static async Task<(HttpClient client, IAsyncDisposable app)> CreateHttpClientAsync()
     {
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        using var handler = new HttpClientHandler()
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        };
-
         appHost.Services.ConfigureHttpClientDefaults(configure =>
         {
-            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
+            configure.ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+                return handler;
+            });
         });
 
-        await using var app = await appHost.BuildAsync();
+        var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        return app.CreateHttpClient("AspiringWeb");
+        var client = app.CreateHttpClient("AspiringWeb");
+        return (client, app);
     }
 
-    private async Task TestPathsAsync(IEnumerable<string> paths)
+    private static async Task TestPathsAsync(IEnumerable<string> paths)
     {
-        using var client = await CreateHttpClientAsync();
+        var (client, app) = await CreateHttpClientAsync();
         var tasks = paths.Select(path => client.GetAsync(new Uri(path, UriKind.Relative)));
 
         foreach (var response in await Task.WhenAll(tasks))
         {
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
+
+        await app.DisposeAsync();
     }
 
     [Fact]
@@ -167,7 +172,7 @@ public class WebTests
     [Fact]
     public async Task GetWeatherForecastPaths_ReturnsOkStatusCode()
     {
-        var paths = new[] { "/health", "/metrics", "/WeatherForecast" };
+        var paths = new[] { "/health", "/metrics", "/weatherforecast" };
         await TestPathsAsync(paths);
     }
 }
