@@ -1,4 +1,5 @@
 using Aspiring.AppHost;
+using Aspiring.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -27,14 +28,22 @@ var api = builder.AddProject<Projects.Aspiring_ApiService>("AspiringAPI")
     .WaitFor(mongoDb)
     .WaitFor(cache)
     .WithReference(cache)
-    .WithReference(mongoDb);
+    .WithReference(mongoDb)
+    .AddSwaggerUIEndpoint()
+    .AddReDocEndpoint()
+    .AddScalarEndpoint();
+;
 
 var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
     .WithExternalHttpEndpoints()
     .WaitFor(sqlDb)
     .WaitFor(cache)
     .WithReference(sqlDb)
-    .WithReference(cache);
+    .WithReference(cache)
+    .AddSwaggerUIEndpoint()
+    .AddReDocEndpoint()
+    .AddScalarEndpoint();
+;
 
 var grafana = builder.AddContainer("Grafana", "grafana/grafana")
                      .WithBindMount("../grafana/config", "/etc/grafana", isReadOnly: true)
@@ -63,5 +72,7 @@ builder.AddHealthChecksUI("Health-Checks-UI")
 builder.AddContainer("Prometheus", "prom/prometheus")
        .WithBindMount("../prometheus", "/etc/prometheus", isReadOnly: true)
        .WithHttpEndpoint(/* This port is fixed as it's referenced from the Grafana config */ port: 9090, targetPort: 9090);
+
+builder.AddProject<Projects.Aspire_ChatApp>("aspire-chatapp");
 
 builder.Build().Run();

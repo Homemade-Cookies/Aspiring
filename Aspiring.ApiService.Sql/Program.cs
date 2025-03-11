@@ -24,7 +24,6 @@ builder.Services.AddIdentityCore<UserAccount>(options => options.SignIn.RequireC
 builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
 #if NET9_0_OR_GREATER
 builder.Services.AddOpenApi();
 #endif
