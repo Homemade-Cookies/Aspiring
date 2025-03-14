@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -14,9 +14,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.DependencyValidation.Analyzers" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Playwright" />
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
@@ -27,6 +31,10 @@
     <Using Include="System.Text.Json" />
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspiring.ApiService.Sql\Aspiring.ApiService.Sql.csproj" />
   </ItemGroup>
 
 </Project>

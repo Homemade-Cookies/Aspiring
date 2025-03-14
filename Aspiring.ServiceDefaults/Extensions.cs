@@ -1,5 +1,8 @@
+using System.Diagnostics;
+using System.Globalization;
 using HealthChecks.UI.Client;
 using HealthChecks.UI.Core;
+using Humanizer.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Configuration;
@@ -7,10 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using OpenTelemetry;
+using OpenTelemetry.Instrumentation.EntityFrameworkCore;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Scalar.AspNetCore;
 
 namespace Aspiring.ServiceDefaults;
 
@@ -21,8 +27,24 @@ public static class Extensions
 {
     private static readonly string[] _metered =
         [
+        "Microsoft.AspNetCore.Diagnostics",
+        "Microsoft.AspNetCore.HeaderParsing",
         "Microsoft.AspNetCore.Hosting",
-        "Microsoft.AspNetCore.Server.Kestrel"
+        "Microsoft.AspNetCore.RateLimiting",
+        "Microsoft.AspNetCore.Routing",
+        "Microsoft.AspNetCore.Server.Kestrel",
+        "Microsoft.AspNetCore.Http.Connections",
+        "Microsoft.AspNetCore.Http.Connections.Client",
+        "Microsoft.AspNetCore.Http.Connections.Server",
+        "Microsoft.EntityFrameworkCore",
+        "Microsoft.Extensions.Diagnostics.HealthChecks",
+        "Microsoft.Extensions.Diagnostics.ResourceMonitoring",
+        "Microsoft.Extensions.Hosting",
+        "Microsoft.Extensions.Http",
+        "Microsoft.Extensions.Logging",
+        "System.Net.Http",
+        "System.Net.NameResolution",
+        "System.Runtime"
         ];
 
     public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder, bool healthUI = false, string sqlServerConnectionString = "", string mongoDbConnectionString = "", string redis = "")
@@ -76,11 +98,22 @@ public static class Extensions
 
         //#endregion region
 
-        builder.Logging.AddOpenTelemetry(logging =>
+        builder.Services.AddLogging(x =>
         {
-            logging.IncludeFormattedMessage = true;
-            logging.IncludeScopes = true;
-            //logging.SetResourceBuilder(resourceBuilder);
+            x.AddOpenTelemetry(logging =>
+            {
+                logging.IncludeFormattedMessage = true;
+                logging.IncludeScopes = true;
+            })
+            .EnableEnrichment()
+            .AddSimpleConsole(options =>
+            {
+                options.IncludeScopes = true;
+                options.ColorBehavior = LoggerColorBehavior.Enabled;
+                options.TimestampFormat = "yyyy-MM-dd HH:mm:ss";
+            })
+            .AddDebug()
+            ;
         });
 
         builder.Services.AddOpenTelemetry()
@@ -93,25 +126,60 @@ public static class Extensions
                     .AddProcessInstrumentation()
                     .AddPrometheusExporter()
                     .AddMeter(_metered)
-                    .AddConsoleExporter()
+                    //.AddMeter(MetricsConstants.Todos)
+                    //.AddMeter(MetricsConstants.Catalog)
+                    .AddConsoleExporter((options, metricOptions) =>
+                    {
+                        metricOptions.PeriodicExportingMetricReaderOptions = new PeriodicExportingMetricReaderOptions
+                        {
+                            ExportIntervalMilliseconds = 60000, // Adjust the interval as needed
+                            ExportTimeoutMilliseconds = 30000
+                        };
+
+                        metricOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                    })
+                    .AddInstrumentation(() => new EntityFrameworkInstrumentationOptions
+                    {
+                        SetDbStatementForText = true,
+                        SetDbStatementForStoredProcedure = true,
+                        EnrichWithIDbCommand = (activity, command) =>
+                        {
+                            try
+                            {
+                                activity.SetTag("db.statement", command.CommandText);
+                                activity.SetTag("db.type", command.CommandType.ToString());
+                                activity.SetTag("db.operation", command.CommandText.Split(' ').FirstOrDefault());
+                                activity.SetTag("db.statement_hash", command.CommandText.GetHashCode(StringComparison.InvariantCultureIgnoreCase).ToString(CultureInfo.InvariantCulture));
+                                activity.SetTag("db.statement_length", command.CommandText.Length.ToString(CultureInfo.InvariantCulture));
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error enriching IDbCommand activity: {ex.Message}");
+                            }
+                        }
+                    })
                     ;
             })
             .WithTracing(tracing =>
             {
-                if (builder.Environment.IsDevelopment())
-                {
-                    tracing.SetSampler(new AlwaysOnSampler());
-                }
-
+#if DEBUG
+                tracing.SetSampler(new AlwaysOnSampler());
+#endif
                 tracing //.SetResourceBuilder(resourceBuilder)
                     .AddAspNetCoreInstrumentation(nci => nci.RecordException = true)
                     .AddHttpClientInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation()
                     .AddConsoleExporter()
                     ;
+
+                //tracing.AddAspNetCoreInstrumentation()
+                //	// Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
+                //	//.AddGrpcClientInstrumentation()
+                //	.AddHttpClientInstrumentation();
             });
 
         builder.AddOpenTelemetryExporters();
+
         return builder;
     }
 
@@ -121,7 +189,20 @@ public static class Extensions
 
         if (useOtlpExporter)
         {
-            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            builder.Services.Configure<OpenTelemetryLoggerOptions>(logging =>
+            {
+                logging.AddOtlpExporter(options => options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+                {
+                    MaxQueueSize = 2048,
+                    ScheduledDelayMilliseconds = 5000,
+                    ExporterTimeoutMilliseconds = 30000,
+                    MaxExportBatchSize = 512
+                });
+            });
+            builder.Services.ConfigureOpenTelemetryMeterProvider(
+                metrics => metrics.AddOtlpExporter());
+            builder.Services.ConfigureOpenTelemetryTracerProvider(
+                tracing => tracing.AddOtlpExporter());
         }
 
         builder.Services.AddOpenTelemetry()
@@ -174,7 +255,7 @@ public static class Extensions
         if (!string.IsNullOrWhiteSpace(mongoDbConnectionString))
         {
             builder.Services.AddHealthChecks()
-                .AddMongoDb(mongoDbConnectionString);
+                .AddMongoDb();
         }
 
         if (!string.IsNullOrWhiteSpace(redis))
@@ -241,12 +322,22 @@ public static class Extensions
     public static IServiceCollection ConfigureOpenTelemetry(this IServiceCollection builder, IConfiguration configuration)
     {
         builder.AddLogging(x =>
+        {
             x.AddOpenTelemetry(logging =>
             {
                 logging.IncludeFormattedMessage = true;
                 logging.IncludeScopes = true;
             })
-        );
+            .EnableEnrichment()
+            .AddSimpleConsole(options =>
+            {
+                options.IncludeScopes = true;
+                options.ColorBehavior = LoggerColorBehavior.Enabled;
+                options.TimestampFormat = "yyyy-MM-dd HH:mm:ss";
+            })
+            .AddDebug()
+            ;
+        });
 
         builder.AddOpenTelemetry()
             .WithMetrics(metrics =>
@@ -260,7 +351,36 @@ public static class Extensions
                     .AddMeter(_metered)
                     //.AddMeter(MetricsConstants.Todos)
                     //.AddMeter(MetricsConstants.Catalog)
-                    .AddConsoleExporter()
+                    .AddConsoleExporter((options, metricOptions) =>
+                    {
+                        metricOptions.PeriodicExportingMetricReaderOptions = new PeriodicExportingMetricReaderOptions
+                        {
+                            ExportIntervalMilliseconds = 60000, // Adjust the interval as needed
+                            ExportTimeoutMilliseconds = 30000
+                        };
+
+                        metricOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
+                    })
+                    .AddInstrumentation(() => new EntityFrameworkInstrumentationOptions
+                    {
+                        SetDbStatementForText = true,
+                        SetDbStatementForStoredProcedure = true,
+                        EnrichWithIDbCommand = (activity, command) =>
+                        {
+                            try
+                            {
+                                activity.SetTag("db.statement", command.CommandText);
+                                activity.SetTag("db.type", command.CommandType.ToString());
+                                activity.SetTag("db.operation", command.CommandText.Split(' ').FirstOrDefault());
+                                activity.SetTag("db.statement_hash", command.CommandText.GetHashCode(StringComparison.InvariantCultureIgnoreCase).ToString(CultureInfo.InvariantCulture));
+                                activity.SetTag("db.statement_length", command.CommandText.Length.ToString(CultureInfo.InvariantCulture));
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error enriching IDbCommand activity: {ex.Message}");
+                            }
+                        }
+                    })
                     ;
             })
             .WithTracing(tracing =>
@@ -422,6 +542,54 @@ public static class Extensions
                 Predicate = _ => true,
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
+
+            bool enableReDoc = Environment.GetEnvironmentVariable("ReDoc__Enabled") != null && bool.TryParse(Environment.GetEnvironmentVariable("ReDoc__Enabled"), out var reDocEnabled) && reDocEnabled;
+            bool enableSwagger = Environment.GetEnvironmentVariable("SwaggerUI__Enabled") != null && bool.TryParse(Environment.GetEnvironmentVariable("SwaggerUI__Enabled"), out var swaggerUiEnabled) && swaggerUiEnabled;
+            bool enableScalar = Environment.GetEnvironmentVariable("Scalar__Enabled") != null && bool.TryParse(Environment.GetEnvironmentVariable("Scalar__Enabled"), out var scalarEnabled) && scalarEnabled;
+            bool mapOpenApi = enableReDoc || enableSwagger || enableScalar;
+
+            if (mapOpenApi)
+            {
+                app.MapOpenApi();
+            }
+
+            if (enableReDoc)
+            {
+                app.UseReDoc(options =>
+                {
+                    options.DocumentTitle = $"{app.Environment.ApplicationName} OpenAPI V1";
+                    options.SpecUrl("/openapi/v1.json");
+                });
+            }
+
+            if (enableSwagger)
+            {
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/openapi/v1.json", $"{app.Environment.ApplicationName} OpenAPI V1");
+                });
+            }
+
+            if (enableScalar)
+            {
+                app.MapScalarApiReference((options) =>
+                {
+                    options.Authentication = new()
+                    {
+                        OAuth2 = new()
+                        {
+                            ClientId = app.Configuration["ServiceConnections:Default:ClientId"],
+                            Scopes = [app.Configuration["ServiceConnections:Default:Scope"] ?? string.Empty]
+                        }
+                    };
+                    options.DarkMode = true;
+                    options.OpenApiRoutePattern = "/openapi/v1.json";
+                    options.AddHeadContent($"<title>{app.Environment.ApplicationName}</title>");
+                    options.AddHeadContent("<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons\">");
+                    //options.AddHeaderContent("X-Api-Key", "your-api-key");
+                    //options.AddHeaderContent("Authorization", "Bearer
+                });
+            }
         }
 
         // Add the health checks endpoint for the HealthChecksUI

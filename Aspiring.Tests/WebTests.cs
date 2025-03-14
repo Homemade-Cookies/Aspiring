@@ -1,54 +1,52 @@
 using System.Net;
 using Aspire.Hosting;
 using Aspiring.AppHost;
-using Microsoft.Extensions.Compliance.Redaction;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Aspiring.Tests;
 
 public class WebTests
 {
+    private static async Task<(HttpClient client, IAsyncDisposable app)> CreateHttpClientAsync()
+    {
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
+        appHost.Services.ConfigureHttpClientDefaults(configure =>
+        {
+            configure.ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                };
+                return handler;
+            });
+        });
+
+        var app = await appHost.BuildAsync();
+        await app.StartAsync();
+
+        var client = app.CreateHttpClient("AspiringWeb");
+        return (client, app);
+    }
+
+    private static async Task TestPathsAsync(IEnumerable<string> paths)
+    {
+        var (client, app) = await CreateHttpClientAsync();
+        var tasks = paths.Select(path => client.GetAsync(new Uri(path, UriKind.Relative)));
+
+        foreach (var response in await Task.WhenAll(tasks))
+        {
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        await app.DisposeAsync();
+    }
+
     [Fact]
     public async Task GetWebResourcePathsReturnOkStatusCode()
     {
-        // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Aspiring_AppHost>();
-        appHost.Services.AddSingleton<IRedactorProvider, NullRedactorProvider>();
-        appHost.Services.AddExtendedHttpClientLogging();
-        appHost.Services.AddLogging(configure =>
-        {
-            configure.AddConsole()
-                .SetMinimumLevel(LogLevel.Debug);
-        });
-        using var handler = new HttpClientHandler()
-        {
-            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        };
-
-        appHost.Services.ConfigureHttpClientDefaults(configure =>
-        {
-            configure.ConfigurePrimaryHttpMessageHandler(() => handler);
-        });
-
-        await using var app = await appHost.BuildAsync();
-        await app.StartAsync();
-
-        var paths = new[]
-        {
-            "/",
-            "/health",
-            "/metrics"
-        };
-
-        var tasks = paths.Select(paths =>
-            app.CreateHttpClient("AspiringWeb").GetAsync(new Uri(paths, UriKind.Relative)));
-
-        // Act
-        var responses = await Task.WhenAll(tasks);
-
-        // Assert
-        Assert.All(responses, (response, index) => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        var paths = new[] { "/", "/health", "/metrics" };
+        await TestPathsAsync(paths);
     }
 
     [Fact]
@@ -60,6 +58,17 @@ public class WebTests
 
         Assert.NotNull(mongo);
         Assert.NotNull(mongoDb);
+    }
+
+    [Fact]
+    public void TestSqlServerConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlResource = builder.AddSqlServer("sql");
+        var sqlResourceDb = sqlResource.AddDatabase("sql-Database");
+
+        Assert.NotNull(sqlResource);
+        Assert.NotNull(sqlResourceDb);
     }
 
     [Fact]
@@ -143,4 +152,28 @@ public class WebTests
 
         Assert.NotNull(prometheus);
     }
+
+    [Fact]
+    public void TestSqlApiConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlDb = builder.AddSqlServer("sql")
+            .WithExternalHttpEndpoints()
+            .AddDatabase("sql-Database");
+        var cache = builder.AddRedis("cache").PublishAsContainer();
+        var sqlApi = builder.AddProject<Projects.Aspiring_ApiService_Sql>("AspiringAPI-SQL")
+            .WithExternalHttpEndpoints()
+            .WithReference(sqlDb)
+            .WithReference(cache);
+
+        Assert.NotNull(sqlApi);
+    }
+
+    [Fact]
+    public async Task GetWeatherForecastPaths_ReturnsOkStatusCode()
+    {
+        var paths = new[] { "/health", "/metrics", "/weatherforecast" };
+        await TestPathsAsync(paths);
+    }
 }
+

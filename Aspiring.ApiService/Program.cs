@@ -13,7 +13,7 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseExceptionHandler();
+app.UseExceptionHandler("/Error");
 
 var summaries = new[]
 {
