@@ -38,6 +38,9 @@ builder.Services.AddEmbeddingGenerator(embeddingGenerator);
 builder.Services.AddDbContext<IngestionCacheDbContext>(options =>
     options.UseSqlite("Data Source=ingestioncache.db"));
 
+// Register ingestion sources
+builder.Services.AddIngestionSources(Path.Combine(builder.Environment.WebRootPath, "Data"));
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -58,12 +61,9 @@ app.UseStaticFiles();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
-// other sources by implementing IIngestionSource.
-// Important: ensure that any content you ingest is trusted, as it may be reflected back
-// to users or could be a source of prompt injection risk.
-await DataIngestor.IngestDataAsync(
-    app.Services,
-    new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
+// Run the ingestion process on startup
+// This will ingest both PDF files and text files from the specified directory
+var ingestTask = app.Services.GetRequiredService<Func<Task>>();
+await ingestTask();
 
 await app.RunAsync();

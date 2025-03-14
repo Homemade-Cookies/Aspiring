@@ -4,7 +4,11 @@ using Microsoft.Extensions.VectorData;
 
 namespace Aspire.ChatApp.Services.Ingestion;
 
-internal sealed class DataIngestor
+internal sealed class DataIngestor(
+    ILogger<DataIngestor> logger,
+    IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+    IVectorStore vectorStore,
+    IngestionCacheDbContext ingestionCacheDb)
 {
     private static readonly Action<ILogger, string, Exception?> LogRemovingIngestedData =
         LoggerMessage.Define<string>(
@@ -23,23 +27,6 @@ internal sealed class DataIngestor
             LogLevel.Information,
             new EventId(3, "IngestionUpToDate"),
             "Ingestion is up-to-date");
-
-    private readonly ILogger<DataIngestor> logger;
-    private readonly IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator;
-    private readonly IVectorStore vectorStore;
-    private readonly IngestionCacheDbContext ingestionCacheDb;
-
-    public DataIngestor(
-        ILogger<DataIngestor> logger,
-        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
-        IVectorStore vectorStore,
-        IngestionCacheDbContext ingestionCacheDb)
-    {
-        this.logger = logger;
-        this.embeddingGenerator = embeddingGenerator;
-        this.vectorStore = vectorStore;
-        this.ingestionCacheDb = ingestionCacheDb;
-    }
 
     public static async Task IngestDataAsync(IServiceProvider services, IIngestionSource source)
     {

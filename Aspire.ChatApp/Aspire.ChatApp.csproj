@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Aspiring.Tests" />
+    <InternalsVisibleTo Include="Aspiring.Tests.Ingestion" />
+    
     <PackageReference Include="OpenAI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />

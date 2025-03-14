@@ -1,11 +1,13 @@
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Aspire.ChatApp.Services.Ingestion;
 
 // A DbContext that keeps track of which documents have been ingested.
 // This makes it possible to avoid re-ingesting documents that have not changed,
 // and to delete documents that have been removed from the underlying source.
-internal sealed class IngestionCacheDbContext(DbContextOptions<IngestionCacheDbContext> options) : DbContext(options)
+internal class IngestionCacheDbContext(DbContextOptions<IngestionCacheDbContext> options) : DbContext(options)
 {
     public DbSet<IngestedDocument> Documents { get; set; } = default!;
     public DbSet<IngestedRecord> Records { get; set; } = default!;
